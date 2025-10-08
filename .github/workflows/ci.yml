@@ -3,10 +3,10 @@ name: ci
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-  workflow_dispatch: {}   # ← permite ejecutarlo desde la pestaña Actions
+    branches: [main]
+  workflow_dispatch: {} # ← permite ejecutarlo desde la pestaña Actions
 
 permissions:
   contents: read
