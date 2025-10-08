@@ -1,14 +1,19 @@
+# .github/workflows/ci.yml
 name: ci
 
 on:
-  pull_request:
   push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}   # ← permite ejecutarlo desde la pestaña Actions
 
 permissions:
   contents: read
 
 jobs:
   build:
+    name: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
