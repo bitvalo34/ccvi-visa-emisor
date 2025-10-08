@@ -1,2 +1,3 @@
 # ccvi-visa-emisor
-Repo for Visa Credit Card Emisor
+Scaffold inicial con CI, lint y pruebas.
+
