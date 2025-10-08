@@ -1,0 +1,40 @@
+{
+  "name": "ccvi-visa-emisor",
+  "version": "1.0.0",
+  "description": "Scaffold inicial con CI, lint y pruebas.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node src/server.js",
+    "test": "node --test",
+    "lint": "eslint .",
+    "format": "prettier -w .",
+    "format:check": "prettier -c ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitvalo34/ccvi-visa-emisor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/bitvalo34/ccvi-visa-emisor/issues"
+  },
+  "homepage": "https://github.com/bitvalo34/ccvi-visa-emisor#readme",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "packageManager": "npm@9.6.7",
+  "dependencies": {
+    "express": "^5.1.0",
+    "pino": "^10.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "eslint": "^9.37.0",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2",
+    "supertest": "^7.1.4"
+  }
+}

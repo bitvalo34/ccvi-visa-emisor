@@ -1,0 +1,106 @@
+name: Feature request
+description: Proponer una mejora o nueva funcionalidad
+labels: ['enhancement']
+body:
+  - type: input
+    id: resumen
+    attributes:
+      label: Resumen
+      placeholder: '¿Qué quieres mejorar o añadir?'
+    validations:
+      required: true
+
+  - type: textarea
+    id: problema
+    attributes:
+      label: Problema / contexto
+      description: 'Describe el problema actual o la oportunidad. ¿Quién se ve afectado y por qué?'
+      placeholder: 'Al usuario X le cuesta Y porque Z…'
+    validations:
+      required: true
+
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Propuesta de solución
+      description: 'Explica la solución sugerida de forma clara y concreta.'
+      placeholder: 'Agregar endpoint /api/... que permita …; actualizar UI …; etc.'
+    validations:
+      required: true
+
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación
+      description: 'Condiciones verificables para considerar completada la mejora.'
+      placeholder: |
+        - Dado X, cuando Y, entonces Z
+        - Respuesta HTTP 200 con esquema …
+        - Pruebas unitarias cubren …
+    validations:
+      required: true
+
+  - type: dropdown
+    id: prioridad
+    attributes:
+      label: Prioridad
+      options:
+        - Alta
+        - Media
+        - Baja
+    validations:
+      required: true
+
+  - type: input
+    id: area
+    attributes:
+      label: Área / módulo afectado
+      placeholder: 'API, DB, Autenticación, UI, CI/CD, etc.'
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas consideradas
+      placeholder: 'Opción A… Opción B… Pros/Contras…'
+    validations:
+      required: false
+
+  - type: textarea
+    id: impacto
+    attributes:
+      label: Impacto estimado / riesgos
+      placeholder: 'Usuarios impactados, cambios de contrato, migraciones, riesgos.'
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: Documentación actualizada (README/OpenAPI)
+        - label: Pruebas unitarias
+        - label: Pruebas de integración/E2E
+        - label: Cambios en DB/migraciones definidos
+        - label: Feature flag (si aplica)
+        - label: Colección Postman/Insomnia actualizada
+    validations:
+      required: false
+
+  - type: textarea
+    id: evidencias
+    attributes:
+      label: Notas adicionales / evidencias
+      description: 'Adjunta capturas, enlaces, logs o referencias.'
+    validations:
+      required: false
+
+  - type: input
+    id: interesados
+    attributes:
+      label: Interesados / contactos
+      placeholder: '@usuario1, @usuario2'
+    validations:
+      required: false
