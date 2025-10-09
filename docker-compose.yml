@@ -17,7 +17,7 @@ services:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
       # pg_isready viene en la imagen oficial de postgres
-      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      test: ['CMD-SHELL', 'pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}']
       interval: 3s
       timeout: 3s
       retries: 10
@@ -29,15 +29,15 @@ services:
     container_name: ccvi_api
     depends_on:
       db:
-        condition: service_healthy   # espera a que pase el healthcheck
+        condition: service_healthy # espera a que pase el healthcheck
     ports:
-      - "${PORT:-3000}:3000"
+      - '${PORT:-3000}:3000'
     environment:
       # URL que la API usará para conectarse a la DB dentro de la red de Compose
-      DATABASE_URL: "postgres://app:app@db:5432/ccvi"
-      NODE_ENV: "development"
-      API_KEY: "${API_KEY:-dev-key}"
-      PORT: "3000"
+      DATABASE_URL: 'postgres://app:app@db:5432/ccvi'
+      NODE_ENV: 'development'
+      API_KEY: '${API_KEY:-dev-key}'
+      PORT: '3000'
 
 volumes:
   pg_data:

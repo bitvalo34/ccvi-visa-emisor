@@ -6,18 +6,14 @@
   "scripts": {
     "dev": "node --env-file=.env src/server.js",
     "start": "node src/server.js",
-
     "format": "prettier -w .",
     "format:check": "prettier -c .",
-
     "lint": "eslint .",
-
     "db:up": "docker compose up -d --build",
     "db:down": "docker compose down -v",
     "db:logs": "docker compose logs -f --tail=100",
     "db:psql": "docker compose exec -it db psql -U app -d ccvi",
-    "db:seed": "docker compose exec -T api node scripts/seed.js", 
-
+    "db:seed": "docker compose exec -T api node scripts/seed.js",
     "test": "node --env-file=.env --test"
   },
   "repository": {
