@@ -25,3 +25,6 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm test
+
+      - name: Build API image
+        run: docker build -t ccvi-visa-emisor:ci .

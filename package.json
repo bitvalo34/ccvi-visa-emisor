@@ -4,11 +4,21 @@
   "description": "Scaffold inicial con CI, lint y pruebas.",
   "main": "index.js",
   "scripts": {
-    "dev": "node src/server.js",
-    "test": "node --test",
-    "lint": "eslint .",
+    "dev": "node --env-file=.env src/server.js",
+    "start": "node src/server.js",
+
     "format": "prettier -w .",
-    "format:check": "prettier -c ."
+    "format:check": "prettier -c .",
+
+    "lint": "eslint .",
+
+    "db:up": "docker compose up -d --build",
+    "db:down": "docker compose down -v",
+    "db:logs": "docker compose logs -f --tail=100",
+    "db:psql": "docker compose exec -it db psql -U app -d ccvi",
+    "db:seed": "docker compose exec -T api node scripts/seed.js", 
+
+    "test": "node --env-file=.env --test"
   },
   "repository": {
     "type": "git",
@@ -28,6 +38,7 @@
   "packageManager": "npm@9.6.7",
   "dependencies": {
     "express": "^5.1.0",
+    "pg": "^8.16.3",
     "pino": "^10.0.0"
   },
   "devDependencies": {
