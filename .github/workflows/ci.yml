@@ -24,7 +24,9 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
+      - name: Prepare .env for tests
+        run: |
+          cp .env.example .env
       - run: npm test
-
       - name: Build API image
         run: docker build -t ccvi-visa-emisor:ci .
