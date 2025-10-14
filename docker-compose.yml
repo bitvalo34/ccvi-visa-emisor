@@ -1,43 +1,70 @@
-# docker compose v2 (el campo 'version' es opcional en Spec actual)
-# Docs: Compose v2 y startup order/healthcheck
-# - https://docs.docker.com/compose/releases/migrate/
-# - https://docs.docker.com/compose/how-tos/startup-order/
-name: ccvi-visa-emisor
-
 services:
   db:
     image: postgres:16
     container_name: ccvi_db
-    restart: unless-stopped
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
       POSTGRES_DB: ccvi
+    ports:
+      - '55432:5432'
     volumes:
       - pg_data:/var/lib/postgresql/data
+      - ./scripts/sql:/app/scripts/sql:ro
     healthcheck:
-      # pg_isready viene en la imagen oficial de postgres
-      test: ['CMD-SHELL', 'pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}']
-      interval: 3s
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h 127.0.0.1']
+      interval: 5s
       timeout: 3s
-      retries: 10
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
 
   api:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: ccvi_api
+    env_file:
+      - .env
+    environment:
+      API_KEY: ${API_KEY}
+      CVV_PEPPER: ${CVV_PEPPER}
+      IDEMPOTENCY_TTL_HOURS: ${IDEMPOTENCY_TTL_HOURS}
+      ISSUER_NAME: ${ISSUER_NAME}
+      BASE_PATH: ${BASE_PATH}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     depends_on:
       db:
-        condition: service_healthy # espera a que pase el healthcheck
+        condition: service_healthy
     ports:
-      - '${PORT:-3000}:3000'
-    environment:
-      # URL que la API usará para conectarse a la DB dentro de la red de Compose
-      DATABASE_URL: 'postgres://app:app@db:5432/ccvi'
-      NODE_ENV: 'development'
-      API_KEY: '${API_KEY:-dev-key}'
-      PORT: '3000'
+      - '3000:3000'
+    volumes:
+      - .:/usr/src/app
+      - node_modules:/usr/src/app/node_modules
+    # EDITADITO: usar script robusto que instala deps si faltan/lock cambió y luego inicia
+    command: ['sh', '-lc', 'chmod +x scripts/docker-entry.sh && scripts/docker-entry.sh']
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE: '/'
+        VITE_API_KEY: ${API_KEY:-}
+    container_name: ccvi_web
+    environment: {}
+    depends_on:
+      - api
+    ports:
+      - '8080:80'
+    restart: unless-stopped
 
 volumes:
   pg_data:
+  node_modules:

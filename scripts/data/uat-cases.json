@@ -1,0 +1,107 @@
+[
+  {
+    "name": "Aprobada saldo suficiente",
+    "query": {
+      "tarjeta": "4111111111111111",
+      "nombre": "JUANPEREZ",
+      "fecha_venc": "202701",
+      "num_seguridad": "123",
+      "monto": "1200",
+      "tienda": "MYBOOKING",
+      "formato": "JSON"
+    },
+    "expected": { "status": "APROBADO" }
+  },
+  {
+    "name": "Denegada por vencida",
+    "query": {
+      "tarjeta": "4000000000000002",
+      "nombre": "CARLOSMENDEZ",
+      "fecha_venc": "202309",
+      "num_seguridad": "789",
+      "monto": "100",
+      "tienda": "MYBOOKING",
+      "formato": "JSON"
+    },
+    "expected": { "status": "DENEGADO", "numero": "0" }
+  },
+  {
+    "name": "Denegada por CVV incorrecto",
+    "query": {
+      "tarjeta": "4111111111111111",
+      "nombre": "JUANPEREZ",
+      "fecha_venc": "202701",
+      "num_seguridad": "999",
+      "monto": "50",
+      "tienda": "MYBOOKING",
+      "formato": "JSON"
+    },
+    "expected": { "status": "DENEGADO", "numero": "0" }
+  },
+  {
+    "name": "Denegada por saldo insuficiente",
+    "query": {
+      "tarjeta": "4000000000009995",
+      "nombre": "MARIALOPEZ",
+      "fecha_venc": "202512",
+      "num_seguridad": "456",
+      "monto": "600",
+      "tienda": "MYBOOKING",
+      "formato": "JSON"
+    },
+    "expected": { "status": "DENEGADO", "numero": "0" }
+  },
+  {
+    "name": "Denegada por tarjeta inexistente",
+    "query": {
+      "tarjeta": "4999999999999999",
+      "nombre": "NADIE",
+      "fecha_venc": "203001",
+      "num_seguridad": "111",
+      "monto": "10",
+      "tienda": "MYBOOKING",
+      "formato": "JSON"
+    },
+    "expected": { "status": "DENEGADO", "numero": "0" }
+  },
+  {
+    "name": "Aprobada monto exacto + caso idempotencia",
+    "query": {
+      "tarjeta": "4555555555554444",
+      "nombre": "LUISPEREZ",
+      "fecha_venc": "202712",
+      "num_seguridad": "555",
+      "monto": "300",
+      "tienda": "MYBOOKING",
+      "formato": "JSON"
+    },
+    "expected": { "status": "APROBADO" },
+    "idempotencyKey": "uat-luis-300-1"
+  },
+  {
+    "name": "Denegada por bloqueada",
+    "query": {
+      "tarjeta": "4012888888881881",
+      "nombre": "ANAGARCIA",
+      "fecha_venc": "202806",
+      "num_seguridad": "321",
+      "monto": "50",
+      "tienda": "MYBOOKING",
+      "formato": "JSON"
+    },
+    "expected": { "status": "DENEGADO", "numero": "0" }
+  },
+  {
+    "name": "Rechazo por formato de tarjeta inválido (no 16 dígitos)",
+    "query": {
+      "tarjeta": "4222222222222",
+      "nombre": "PRUEBACORTA",
+      "fecha_venc": "202901",
+      "num_seguridad": "999",
+      "monto": "10",
+      "tienda": "MYBOOKING",
+      "formato": "JSON"
+    },
+    "expected": { "status": "DENEGADO" }
+  }
+]

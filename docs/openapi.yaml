@@ -1,0 +1,545 @@
+openapi: 3.1.0
+info:
+  title: Emisor Visa – API
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+components:
+  schemas:
+    AuthorizationRequest:
+      type: object
+      required: [tarjeta, nombre, fecha_venc, cvv, monto, tienda]
+      properties:
+        tarjeta: { type: string, pattern: '^\d{16}$' }
+        nombre: { type: string }
+        fecha_venc: { type: string, pattern: '^\d{6}$', description: 'yyyymm' }
+        cvv: { type: string, pattern: '^\d{3}$' }
+        monto: { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+        tienda: { type: string }
+      xml:
+        name: authorization
+    AuthorizationResponse:
+      type: object
+      required: [emisor, tarjeta, status, numero]
+      properties:
+        emisor: { type: string, example: VISA }
+        tarjeta: { type: string, description: 'Enmascarado en respuestas' }
+        status: { type: string, enum: [APROBADO, DENEGADO] }
+        numero: { type: string, description: '6 dígitos o "0" si denegado' }
+        creada_en: { type: string, format: date-time, nullable: true }
+      xml:
+        name: authorization
+    LegacyAutorizacionResponse:
+      type: object
+      properties:
+        emisor: { type: string, example: VISA }
+        tarjeta: { type: string }
+        status: { type: string, enum: [APROBADO, DENEGADO] }
+        numero: { type: string }
+      required: [emisor, tarjeta, status, numero]
+      xml:
+        name: autorizacion # raíz exacta del PDF
+    CardCreateRequest:
+      type: object
+      required: [numero, nombre, fecha_venc, cvv, limite]
+      properties:
+        numero: { type: string, pattern: '^\d{16}$' }
+        nombre: { type: string }
+        fecha_venc: { type: string, pattern: '^\d{6}$', description: 'yyyymm' }
+        cvv: { type: string, pattern: '^\d{3}$' }
+        limite: { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+        disponible: { type: string, pattern: '^\d+(\.\d{1,2})?$', nullable: true }
+        estado: { type: string, enum: [activa, bloqueada], nullable: true }
+      xml:
+        name: card
+    CardPatchRequest:
+      type: object
+      properties:
+        estado: { type: string, enum: [activa, bloqueada] }
+        disponible: { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+      xml:
+        name: card
+    CardResponse:
+      type: object
+      required: [emisor, numero, nombre, fecha_venc, limite, disponible, estado]
+      properties:
+        emisor: { type: string, example: VISA }
+        numero: { type: string, description: 'PAN enmascarado ****-****-****-NNNN' }
+        nombre: { type: string, description: 'Nombre normalizado' }
+        fecha_venc: { type: string, pattern: '^\d{6}$' }
+        limite: { type: number }
+        disponible: { type: number }
+        estado: { type: string, enum: [activa, bloqueada] }
+        creada_en: { type: string, format: date-time, nullable: true }
+        actualizada_en: { type: string, format: date-time, nullable: true }
+      xml:
+        name: card
+    PaymentRequest:
+      type: object
+      required: [monto]
+      properties:
+        monto: { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+        referencia: { type: string, maxLength: 64 }
+        idempotencyKey:
+          { type: string, maxLength: 255, description: 'Alternativa al header Idempotency-Key' }
+      xml:
+        name: payment
+    PaymentResponse:
+      type: object
+      required: [emisor, tarjeta, monto, disponible]
+      properties:
+        emisor: { type: string, example: VISA }
+        tarjeta: { type: string, description: 'PAN enmascarado ****-****-****-NNNN' }
+        monto: { type: string, pattern: '^\d+(\.\d{2})$' }
+        disponible: { type: number }
+        referencia: { type: string, nullable: true }
+        creada_en: { type: string, format: date-time, nullable: true }
+      xml:
+        name: payment
+paths:
+  /metadata:
+    get:
+      summary: Metadatos del emisor
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emisor_id: { type: string }
+                  emisor: { type: string }
+                  host: { type: string }
+                  formatos:
+                    type: array
+                    items: { type: string, enum: [JSON, XML] }
+                  scripts:
+                    type: object
+                    properties:
+                      autorizacion: { type: string }
+              examples:
+                json:
+                  value:
+                    emisor_id: VISA-EMISOR-LOCAL
+                    emisor: VISA
+                    host: http://localhost:3000
+                    formatos: [JSON, XML]
+                    scripts: { autorizacion: /autorizacion }
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  emisor_id: { type: string }
+                  emisor: { type: string }
+                  host: { type: string }
+                  formatos:
+                    type: array
+                    items: { type: string }
+                  scripts:
+                    type: object
+                    properties:
+                      autorizacion: { type: string }
+              examples:
+                xml:
+                  value: |
+                    <metadata>
+                      <emisor_id>VISA-EMISOR-LOCAL</emisor_id>
+                      <emisor>VISA</emisor>
+                      <host>http://localhost:3000</host>
+                      <formatos>JSON</formatos>
+                      <formatos>XML</formatos>
+                      <scripts>
+                        <autorizacion>/autorizacion</autorizacion>
+                      </scripts>
+                    </metadata>
+  /autorizacion:
+    get:
+      summary: Autorización estilo legacy (script)
+      parameters:
+        - in: query
+          name: tarjeta
+          schema: { type: string, pattern: '^\d{16}$' }
+          required: true
+        - in: query
+          name: nombre
+          schema: { type: string }
+          required: true
+        - in: query
+          name: fecha_venc
+          schema: { type: string, pattern: '^\d{6}$' }
+          required: true
+        - in: query
+          name: num_seguridad
+          schema: { type: string, pattern: '^\d{3}$' }
+          required: true
+        - in: query
+          name: monto
+          schema: { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+          required: true
+        - in: query
+          name: tienda
+          schema: { type: string }
+          required: true
+        - in: query
+          name: formato
+          description: "Fuerza salida en XML/JSON. Si se omite, se usa 'Accept' (server-driven negotiation) o JSON por defecto."
+          schema: { type: string, enum: [XML, JSON] }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  autorización: { $ref: '#/components/schemas/LegacyAutorizacionResponse' }
+              examples:
+                aprobado:
+                  value:
+                    autorización:
+                      emisor: VISA
+                      tarjeta: '****-****-****-1111'
+                      status: APROBADO
+                      numero: '654321'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/LegacyAutorizacionResponse'
+              examples:
+                denegado:
+                  value: |
+                    <autorizacion>
+                      <emisor>VISA</emisor>
+                      <tarjeta>****-****-****-1111</tarjeta>
+                      <status>DENEGADO</status>
+                      <numero>0</numero>
+                    </autorizacion>
+  /api/v1/authorizations:
+    post:
+      summary: Autoriza un consumo con idempotencia
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema: { type: string }
+        - in: header
+          name: Idempotency-Key
+          required: false
+          description: 'Si se repite con el mismo payload: 200 con el mismo resultado; si cambia el payload: 409.'
+          schema: { type: string, maxLength: 255 }
+        - in: query
+          name: formato
+          required: false
+          schema: { type: string, enum: [XML, JSON] }
+          description: "Fuerza formato de salida. Si se omite, se usa 'Accept' o JSON por defecto."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuthorizationRequest' }
+            examples:
+              ok:
+                value:
+                  tarjeta: '4111111111111111'
+                  nombre: 'JUAN PEREZ'
+                  fecha_venc: '202701'
+                  cvv: '123'
+                  monto: '100'
+                  tienda: 'MYBOOKING'
+          application/xml:
+            schema: { $ref: '#/components/schemas/AuthorizationRequest' }
+            examples:
+              ok:
+                value: |
+                  <authorization>
+                    <tarjeta>4111111111111111</tarjeta>
+                    <nombre>JUAN PEREZ</nombre>
+                    <fecha_venc>202701</fecha_venc>
+                    <cvv>123</cvv>
+                    <monto>100</monto>
+                    <tienda>MYBOOKING</tienda>
+                  </authorization>
+      responses:
+        '201':
+          description: Creado (primera vez con una Idempotency-Key)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthorizationResponse' }
+            application/xml:
+              schema: { $ref: '#/components/schemas/AuthorizationResponse' }
+        '200':
+          description: Reintento idempotente (mismo cuerpo que la primera vez)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthorizationResponse' }
+            application/xml:
+              schema: { $ref: '#/components/schemas/AuthorizationResponse' }
+        '409':
+          description: Idempotency-Key reutilizada con parámetros distintos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_PARAMETERS }
+                  previous:
+                    type: object
+                    properties:
+                      tarjeta: { type: string }
+                      monto: { type: string }
+                      tienda: { type: string }
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  previous:
+                    type: object
+                    properties:
+                      tarjeta: { type: string }
+                      monto: { type: string }
+                      tienda: { type: string }
+        '422':
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code: { type: string, example: VALIDATION_ERROR }
+                      fields:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            field: { type: string }
+                            reason: { type: string }
+            application/xml:
+              examples:
+                xml:
+                  value: |
+                    <error>
+                      <code>VALIDATION_ERROR</code>
+                      <fields>
+                        <field>
+                          <name>tarjeta</name>
+                          <reason>INVALID_FORMAT_OR_LUHN</reason>
+                        </field>
+                      </fields>
+                    </error>
+        '401':
+          description: API key inválida
+  /api/v1/cards:
+    post:
+      summary: Crea una tarjeta emitida
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CardCreateRequest' }
+            examples:
+              ok:
+                value:
+                  numero: '4111111111111111'
+                  nombre: 'JUAN PEREZ'
+                  fecha_venc: '202901'
+                  cvv: '123'
+                  limite: '2000.00'
+          application/xml:
+            schema: { $ref: '#/components/schemas/CardCreateRequest' }
+            examples:
+              ok:
+                value: |
+                  <card>
+                    <numero>4111111111111111</numero>
+                    <nombre>JUAN PEREZ</nombre>
+                    <fecha_venc>202901</fecha_venc>
+                    <cvv>123</cvv>
+                    <limite>2000.00</limite>
+                  </card>
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CardResponse' }
+            application/xml:
+              schema: { $ref: '#/components/schemas/CardResponse' }
+        '409':
+          description: Tarjeta ya existe
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: CARD_ALREADY_EXISTS }
+            application/xml:
+              examples:
+                xml:
+                  value: |
+                    <error>
+                      <code>CARD_ALREADY_EXISTS</code>
+                    </error>
+        '422':
+          description: Error de validación
+        '401':
+          description: API key inválida
+  /api/v1/cards/{numero}:
+    get:
+      summary: Obtiene detalles de una tarjeta (enmascarada)
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema: { type: string }
+        - in: path
+          name: numero
+          required: true
+          schema: { type: string, pattern: '^\d{16}$' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CardResponse' }
+            application/xml:
+              schema: { $ref: '#/components/schemas/CardResponse' }
+        '404':
+          description: No encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: CARD_NOT_FOUND }
+            application/xml:
+              examples:
+                xml:
+                  value: |
+                    <error>
+                      <code>CARD_NOT_FOUND</code>
+                    </error>
+        '401':
+          description: API key inválida
+    patch:
+      summary: Actualiza estado y/o disponible de una tarjeta
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema: { type: string }
+        - in: path
+          name: numero
+          required: true
+          schema: { type: string, pattern: '^\d{16}$' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CardPatchRequest' }
+            examples:
+              ok:
+                value:
+                  estado: bloqueada
+                  disponible: '1500.00'
+          application/xml:
+            schema: { $ref: '#/components/schemas/CardPatchRequest' }
+            examples:
+              ok:
+                value: |
+                  <card>
+                    <estado>bloqueada</estado>
+                    <disponible>1500.00</disponible>
+                  </card>
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CardResponse' }
+            application/xml:
+              schema: { $ref: '#/components/schemas/CardResponse' }
+        '422':
+          description: Valor de disponible inválido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: INVALID_AVAILABLE }
+            application/xml:
+              examples:
+                xml:
+                  value: |
+                    <error>
+                      <code>INVALID_AVAILABLE</code>
+                    </error>
+        '404':
+          description: No encontrada
+        '401':
+          description: API key inválida
+  /api/v1/cards/{numero}/payments:
+    post:
+      summary: Registra un pago que incrementa el disponible de la tarjeta
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema: { type: string }
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema: { type: string, maxLength: 255 }
+        - in: path
+          name: numero
+          required: true
+          schema: { type: string, pattern: '^\d{16}$' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PaymentRequest' }
+            examples:
+              ok:
+                value:
+                  monto: '100.00'
+                  referencia: 'ABCD1234'
+          application/xml:
+            schema: { $ref: '#/components/schemas/PaymentRequest' }
+            examples:
+              ok:
+                value: |
+                  <payment>
+                    <monto>100.00</monto>
+                    <referencia>ABCD1234</referencia>
+                    <idempotencyKey>idem-abc-001</idempotencyKey>
+                  </payment>
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentResponse' }
+            application/xml:
+              schema: { $ref: '#/components/schemas/PaymentResponse' }
+        '200':
+          description: Reintento idempotente (mismo resultado)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentResponse' }
+            application/xml:
+              schema: { $ref: '#/components/schemas/PaymentResponse' }
+        '404':
+          description: Tarjeta no encontrada
+        '422':
+          description: Error de validación
+        '401':
+          description: API key inválida

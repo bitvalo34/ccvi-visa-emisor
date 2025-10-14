@@ -1,10 +1,21 @@
 {
   "name": "ccvi-visa-emisor",
   "version": "1.0.0",
-  "description": "Scaffold inicial con CI, lint y pruebas.",
+  "description": "Emisor Visa — API REST JSON con Postgres y Docker.",
   "main": "index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "packageManager": "npm@9.6.7",
   "scripts": {
+    "seed": "node scripts/seed.js",
+    "seed:reset": "node scripts/seed.js",
+    "balance": "node scripts/check-balance.js",
+    "seed:docker": "docker compose exec -T api node /usr/src/app/scripts/seed.js",
+    "seed:rebuild": "docker compose up -d db && docker compose exec -T db pg_isready -q -U app -d ccvi && docker compose exec -T api node /usr/src/app/scripts/seed.js",
     "dev": "node --env-file=.env src/server.js",
+    "dev:logs": "node --env-file=.env src/server.js | pino-pretty",
     "start": "node src/server.js",
     "format": "prettier -w .",
     "format:check": "prettier -c .",
@@ -13,34 +24,46 @@
     "db:down": "docker compose down -v",
     "db:logs": "docker compose logs -f --tail=100",
     "db:psql": "docker compose exec -it db psql -U app -d ccvi",
-    "db:seed": "docker compose exec -T api node scripts/seed.js",
-    "test": "node --env-file=.env --test"
+    "db:sql:init": "docker compose exec -T db psql -U app -d ccvi -v ON_ERROR_STOP=1 -f /app/scripts/sql/001_init.sql",
+    "db:sql:biz": "docker compose exec -T db psql -U app -d ccvi -v ON_ERROR_STOP=1 -f /app/scripts/sql/002_business.sql",
+    "db:init": "npm run db:sql:init && npm run db:sql:biz",
+    "db:reset": "docker compose exec -T db psql -U app -d ccvi -c \"DROP SCHEMA IF EXISTS emisor CASCADE;\" && npm run db:init",
+    "db:seed": "docker compose exec -T api node /usr/src/app/scripts/seed.js",
+    "db:balance": "docker compose exec -T db psql -U app -d ccvi -c \"SELECT numero, monto_autorizado, monto_disponible, estado FROM emisor.tarjetas ORDER BY numero LIMIT 20;\"",
+    "test": "node --env-file=.env --test",
+    "test:unit": "node --test tests/unit",
+    "test:integration": "node --env-file=.env --test tests/integration/**/*.test.js",
+    "spec:lint": "echo //EDITADITO && redocly lint docs/openapi.yaml",
+    "spec:preview": "echo //EDITADITO && redocly preview-docs docs/openapi.yaml",
+    "spec:bundle": "echo //EDITADITO && redocly bundle docs/openapi.yaml -o docs/openapi.bundle.yaml"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bitvalo34/ccvi-visa-emisor.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "bugs": {
     "url": "https://github.com/bitvalo34/ccvi-visa-emisor/issues"
   },
   "homepage": "https://github.com/bitvalo34/ccvi-visa-emisor#readme",
-  "engines": {
-    "node": ">=24 <25"
-  },
-  "packageManager": "npm@9.6.7",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "express": "^5.1.0",
+    "fast-xml-parser": "^5.3.0",
+    "js-yaml": "4.1.0",
     "pg": "^8.16.3",
-    "pino": "^10.0.0"
+    "pino": "^10.0.0",
+    "pino-http": "^11.0.0",
+    "swagger-ui-express": "5.0.1",
+    "xmlbuilder2": "^3.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
+    "@redocly/cli": "^2.5.0",
     "eslint": "^9.37.0",
     "globals": "^16.4.0",
+    "pino-pretty": "^13.1.2",
     "prettier": "^3.6.2",
     "supertest": "^7.1.4"
   }

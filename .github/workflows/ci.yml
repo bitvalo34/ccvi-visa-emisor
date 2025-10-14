@@ -1,32 +1,82 @@
-# .github/workflows/ci.yml
-name: ci
+name: CI
 
 on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
-  workflow_dispatch: {} # ← permite ejecutarlo desde la pestaña Actions
 
-permissions:
-  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    name: build
+  lint_unit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '24.x'
-          check-latest: true
+          node-version: '24'
+          cache: 'npm'
       - run: npm ci
-      - run: npm run lint
       - run: npm run format:check
-      - name: Prepare .env for tests
+      - run: npm run lint
+      # Si no tienes /tests/unit, esta línea fallará: cambia a "npm test"
+      - run: |
+          npm run test:unit || npm test
+
+  integration_with_db:
+    needs: lint_unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Crea .env para el contenedor api
+      - name: Create .env for API
         run: |
-          cp .env.example .env
-      - run: npm test
-      - name: Build API image
-        run: docker build -t ccvi-visa-emisor:ci .
+          cat > .env << 'EOF'
+          NODE_ENV=test
+          PORT=3000
+          LOG_LEVEL=warn
+          POSTGRES_HOST=db
+          POSTGRES_PORT=5432
+          POSTGRES_DB=ccvi
+          POSTGRES_USER=app
+          POSTGRES_PASSWORD=app
+          CVV_PEPPER=dev-pepper
+          API_KEY=ci-key
+          EOF
+
+      - name: Start stack (db + api)
+        run: docker compose up -d --build
+
+      - name: Wait for db to be healthy
+        run: |
+          DB_ID=$(docker compose ps -q db)
+          for i in {1..40}; do
+            health=$(docker inspect --format='{{.State.Health.Status}}' "$DB_ID")
+            if [ "$health" = "healthy" ]; then
+              echo "DB healthy"; exit 0
+            fi
+            echo "Waiting for DB ($i/40): $health"
+            sleep 2
+          done
+          docker compose logs db
+          exit 1
+
+      - name: Init schema (001, 002)
+        run: |
+          docker compose exec -T db psql -U app -d ccvi -v ON_ERROR_STOP=1 -f /app/scripts/sql/001_init.sql
+          docker compose exec -T db psql -U app -d ccvi -v ON_ERROR_STOP=1 -f /app/scripts/sql/002_business.sql
+
+      # Opcional: si quieres dataset
+      # - name: Seed
+      #   run: docker compose exec -T api node scripts/seed.js
+
+      - name: Run integration tests
+        run: |
+          docker compose exec -T api npm run test:integration || docker compose exec -T api npm test
+
+      - name: Shutdown
+        if: always()
+        run: docker compose down -v

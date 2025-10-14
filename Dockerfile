@@ -1,20 +1,18 @@
-# syntax=docker/dockerfile:1.7
+# Etapa única para desarrollo (para prod haríamos multi-stage)
 FROM node:24-bookworm-slim
 
-# Trabajamos como usuario no root por seguridad
+# Evita prompts y reduce tamaño
+ENV NODE_ENV=development
+
 WORKDIR /usr/src/app
 
-# Copiamos package* primero para caché eficiente
+# Instala dependencias según lockfile
 COPY package*.json ./
-
-# Instala deps (solo prod cuando se hace `--omit=dev`)
-RUN npm ci
+RUN npm ci --prefer-offline --no-audit --no-fund
 
 # Copia el resto del código
 COPY . .
 
-# Puerto expuesto por la API
 EXPOSE 3000
 
-# Arranque por defecto (usa PORT si existe)
-CMD ["node", "src/server.js"]
+CMD ["node","src/server.js"]

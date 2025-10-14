@@ -1,0 +1,82 @@
+[
+  {
+    "numero": "4111111111111111",
+    "nombre": "JUAN PEREZ",
+    "fecha_venc": "202701",
+    "cvv": "123",
+    "monto_autorizado": 2000,
+    "monto_disponible": 2000,
+    "estado": "activa",
+    "nota": "aprobada con saldo suficiente"
+  },
+  {
+    "numero": "4000000000009995",
+    "nombre": "MARIA LOPEZ",
+    "fecha_venc": "202512",
+    "cvv": "456",
+    "monto_autorizado": 1000,
+    "monto_disponible": 100,
+    "estado": "activa",
+    "nota": "saldo insuficiente para compras > 100"
+  },
+  {
+    "numero": "4000000000000002",
+    "nombre": "CARLOS MENDEZ",
+    "fecha_venc": "202309",
+    "cvv": "789",
+    "monto_autorizado": 1500,
+    "monto_disponible": 1500,
+    "estado": "vencida",
+    "nota": "vencida (para denegado por fecha)"
+  },
+  {
+    "numero": "4012888888881881",
+    "nombre": "ANA GARCIA",
+    "fecha_venc": "202806",
+    "cvv": "321",
+    "monto_autorizado": 5000,
+    "monto_disponible": 5000,
+    "estado": "bloqueada",
+    "nota": "denegado por bloqueada"
+  },
+  {
+    "numero": "4555555555554444",
+    "nombre": "LUIS PEREZ",
+    "fecha_venc": "202712",
+    "cvv": "555",
+    "monto_autorizado": 600,
+    "monto_disponible": 300,
+    "estado": "activa",
+    "nota": "exactamente 300 para compra exacta + idempotencia"
+  },
+  {
+    "numero": "4222222222222222",
+    "nombre": "ZERO BALANCE",
+    "fecha_venc": "202912",
+    "cvv": "222",
+    "monto_autorizado": 1000,
+    "monto_disponible": 0,
+    "estado": "activa",
+    "nota": "tarjeta con disponible 0 para forzar denegado por saldo"
+  },
+  {
+    "numero": "4000000000000101",
+    "nombre": "LIMITE BAJO",
+    "fecha_venc": "202803",
+    "cvv": "010",
+    "monto_autorizado": 50,
+    "monto_disponible": 50,
+    "estado": "activa",
+    "nota": "tarjeta para compras pequeñas"
+  },
+  {
+    "numero": "4484070000000000",
+    "nombre": "PRUEBA TRIGGER",
+    "fecha_venc": "202711",
+    "cvv": "407",
+    "monto_autorizado": 1200,
+    "monto_disponible": 600,
+    "estado": "activa",
+    "nota": "para probar consumos y pagos combinados"
+  }
+]
