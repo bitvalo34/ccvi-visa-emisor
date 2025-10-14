@@ -21,9 +21,7 @@ jobs:
       - run: npm ci
       - run: npm run format:check
       - run: npm run lint
-      # Si no tienes /tests/unit, esta línea fallará: cambia a "npm test"
-      - run: |
-          npm run test:unit || npm test
+      - run: npm run test:unit
 
   integration_with_db:
     needs: lint_unit
