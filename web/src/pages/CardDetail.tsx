@@ -76,7 +76,10 @@ export default function CardDetail() {
   /* ---------- mutaciones: estado y pagos ---------- */
   const mutEstado = useMutation({
     mutationFn: (estado: Card['estado']) => api.updateCard(numero, { estado }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['card', numero] }), // patrón de invalidación recomendado. :contentReference[oaicite:3]{index=3}
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['card', numero] });
+      qc.invalidateQueries({ queryKey: ['cards'] }); // refresca listado global
+    },
   });
 
   const [montoPago, setMontoPago] = useState<number | ''>('');
@@ -264,6 +267,7 @@ export default function CardDetail() {
                     whileTap={{ scale: 0.97 }}
                     className="btn btn-outline-secondary flex-fill"
                     onClick={() => mutEstado.mutate('vencida')}
+                    disabled={isFutureOrCurrentYYYYMM(c.fecha_venc)}
                   >
                     <CalendarDays size={16} className="me-1" /> Vencida
                   </motion.button>
@@ -303,7 +307,24 @@ export default function CardDetail() {
               </form>
               {(mutEstado.isError || mutPago.isError) && (
                 <div className="text-danger mt-2 small">
-                  {(mutEstado.error as Error)?.message || (mutPago.error as Error)?.message}
+                  {(() => {
+                    const rawErr = mutEstado.error as unknown;
+                    let code: string | undefined;
+                    if (rawErr && typeof rawErr === 'object') {
+                      const maybeResp = (rawErr as { response?: unknown }).response;
+                      if (maybeResp && typeof maybeResp === 'object') {
+                        const maybeData = (maybeResp as { data?: unknown }).data;
+                        if (maybeData && typeof maybeData === 'object') {
+                          const maybeError = (maybeData as { error?: { code?: string } }).error;
+                          code = maybeError?.code;
+                        }
+                      }
+                    }
+                    if (code === 'CANNOT_EXPIRE_FUTURE') {
+                      return 'No puedes marcar vencida una tarjeta cuya fecha aún no pasa.';
+                    }
+                    return (mutEstado.error as Error)?.message || (mutPago.error as Error)?.message;
+                  })()}
                 </div>
               )}
             </div>

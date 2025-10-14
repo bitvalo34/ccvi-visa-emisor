@@ -155,7 +155,11 @@ router.get('/:numero', requireApiKey, async (req, res) => {
 
 /**
  * PATCH /api/v1/cards/:numero
- * Permite actualizar 'estado' y/o 'disponible' (set absoluto, validando que 0 <= disponible <= limite)
+ * Permite actualizar 'estado', 'disponible', 'nombre_titular' y 'fecha_venc'.
+ * estado admite: activa | bloqueada | vencida.
+ * disponible: set absoluto (0 <= disponible <= monto_autorizado).
+ * fecha_venc: formato YYYYMM.
+ * nombre_titular: cadena no vacía.
  */
 router.patch(
   '/:numero',
@@ -166,6 +170,8 @@ router.patch(
     const numero = cleanDigits(req.params.numero);
     const estadoReq = req.body?.estado;
     const dispReq = req.body?.disponible;
+    const nombreReq = req.body?.nombre ?? req.body?.nombre_titular;
+    const fechaVencReq = req.body?.fecha_venc;
 
     try {
       const out = await withTransaction(async (client) => {
@@ -178,9 +184,22 @@ router.patch(
 
         let estado = card.estado;
         let disponible = card.monto_disponible;
+        let nombre_titular = card.nombre_titular; // almacenamos crudo
+        let fecha_venc = card.fecha_venc;
 
         if (estadoReq != null) {
-          estado = String(estadoReq).toLowerCase() === 'bloqueada' ? 'bloqueada' : 'activa';
+          const e = String(estadoReq).toLowerCase();
+          if (['activa', 'bloqueada', 'vencida'].includes(e)) {
+            if (e === 'vencida') {
+              // Sólo permitir marcar vencida si la fecha ya pasó
+              const currentYm = new Date();
+              const ym = `${currentYm.getFullYear()}${String(currentYm.getMonth() + 1).padStart(2, '0')}`; // YYYYMM
+              if (card.fecha_venc >= ym) {
+                throw new Error('CANNOT_EXPIRE_FUTURE');
+              }
+            }
+            estado = e;
+          }
         }
         if (dispReq != null) {
           const d = Number(dispReq);
@@ -189,10 +208,28 @@ router.patch(
           }
           disponible = d;
         }
+        if (nombreReq != null) {
+          const n = String(nombreReq).trim();
+          if (n) {
+            nombre_titular = n;
+          }
+        }
+        if (fechaVencReq != null) {
+          const fv = String(fechaVencReq).trim();
+          if (/^\d{6}$/.test(fv)) {
+            fecha_venc = fv;
+          }
+        }
         const { rows: upd } = await client.query(
-          `UPDATE emisor.tarjetas SET estado=$2, monto_disponible=$3, actualizada_en=NOW() WHERE numero=$1
+          `UPDATE emisor.tarjetas
+             SET estado=$2,
+                 monto_disponible=$3,
+                 nombre_titular=$4,
+                 fecha_venc=$5,
+                 actualizada_en=NOW()
+           WHERE numero=$1
            RETURNING numero, nombre_titular_normalizado, fecha_venc, monto_autorizado, monto_disponible, estado, actualizada_en`,
-          [numero, estado, disponible],
+          [numero, estado, disponible, nombre_titular, fecha_venc],
         );
         return upd[0];
       });
@@ -220,10 +257,37 @@ router.patch(
           reason: '0 <= disponible <= limite',
         });
       }
+      if (String(err?.message).includes('CANNOT_EXPIRE_FUTURE')) {
+        return sendError(req, res, 422, 'CANNOT_EXPIRE_FUTURE', {
+          reason: 'fecha_venc aún no ha pasado',
+        });
+      }
       return sendError(req, res, 500, 'INTERNAL_ERROR');
     }
   },
 );
+
+/**
+ * DELETE /api/v1/cards/:numero
+ * Elimina físicamente la tarjeta (hard delete) siempre.
+ * Nota: Las transacciones históricas permanecen referenciando el numero (sin FK restrictivo) para auditoría.
+ * Respuesta 200: { action: 'deleted', numero }
+ * 404 si no existe.
+ */
+router.delete('/:numero', requireApiKey, async (req, res) => {
+  const numero = cleanDigits(req.params.numero);
+  try {
+    const { rows: cardRows } = await pool.query(
+      'SELECT numero FROM emisor.tarjetas WHERE numero=$1',
+      [numero],
+    );
+    if (!cardRows.length) return sendError(req, res, 404, 'CARD_NOT_FOUND');
+    await pool.query('DELETE FROM emisor.tarjetas WHERE numero=$1', [numero]);
+    return res.status(200).json({ numero, action: 'deleted' });
+  } catch {
+    return sendError(req, res, 500, 'INTERNAL_ERROR');
+  }
+});
 
 /**
  * POST /api/v1/cards/:numero/payments

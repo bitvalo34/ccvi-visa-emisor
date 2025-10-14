@@ -25,14 +25,25 @@ export function validateCreateCard(req, res, next) {
 export function validatePatchCard(req, res, next) {
   const b = req.body || {};
   const errors = [];
-  if (
-    b.estado != null &&
-    !['activa', 'bloqueada', 'ACTIVA', 'BLOQUEADA'].includes(String(b.estado))
-  ) {
-    errors.push({ field: 'estado', reason: 'INVALID_VALUE' });
+  if (b.estado != null) {
+    const estadoVal = String(b.estado).toLowerCase();
+    if (!['activa', 'bloqueada', 'vencida'].includes(estadoVal)) {
+      errors.push({ field: 'estado', reason: 'INVALID_VALUE' });
+    }
   }
   if (b.disponible != null && !/^\d+(\.\d{1,2})?$/.test(String(b.disponible))) {
     errors.push({ field: 'disponible', reason: 'INVALID_AMOUNT' });
+  }
+  if (b.nombre != null || b.nombre_titular != null) {
+    const nombre = String(b.nombre ?? b.nombre_titular ?? '').trim();
+    if (!nombre) {
+      errors.push({ field: 'nombre', reason: 'REQUIRED' });
+    }
+  }
+  if (b.fecha_venc != null) {
+    if (!/^\d{6}$/.test(String(b.fecha_venc))) {
+      errors.push({ field: 'fecha_venc', reason: 'INVALID_FORMAT' });
+    }
   }
   if (errors.length) return sendValidationError(req, res, errors);
   next();

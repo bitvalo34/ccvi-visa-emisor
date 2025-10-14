@@ -14,6 +14,9 @@ export const api = {
   updateCard: (n: string, body: Partial<Card>) =>
     http.patch<Card>(`/api/v1/cards/${n}`, body).then((r) => r.data),
 
+  deleteCard: (n: string) =>
+    http.delete<{ numero: string; action: string }>(`/api/v1/cards/${n}`).then((r) => r.data),
+
   // pagos (aumenta disponible) — usa Idempotency-Key automático desde el interceptor
   registerPayment: (n: string, monto: number) =>
     http

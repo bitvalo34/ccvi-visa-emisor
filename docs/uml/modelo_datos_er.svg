@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SVG export simplificado del modelo E/R -->
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="420" viewBox="0 0 820 420" font-family="Arial,Helvetica,sans-serif" font-size="12">
+  <defs>
+    <style>.title{font-weight:bold;font-size:14px}.attr{dominant-baseline:middle}.pk{font-weight:bold;text-decoration:underline}.ghost{fill:#666}.sens{fill:#bb2222}</style>
+  </defs>
+  <!-- Tarjeta -->
+  <rect x="40" y="40" width="200" height="250" rx="8" ry="8" fill="#fdfdfd" stroke="#333"/>
+  <text x="140" y="60" text-anchor="middle" class="title">Tarjeta</text>
+  <text x="50" y="90" class="attr pk">numero (PK)</text>
+  <text x="50" y="110" class="attr">nombre_titular</text>
+  <text x="50" y="130" class="attr ghost">nombre_titular_normalizado</text>
+  <text x="50" y="150" class="attr">fecha_venc</text>
+  <text x="50" y="170" class="attr sens">cvv_hmac</text>
+  <text x="50" y="190" class="attr">monto_autorizado</text>
+  <text x="50" y="210" class="attr">monto_disponible</text>
+  <text x="50" y="230" class="attr">estado</text>
+  <text x="50" y="250" class="attr ghost">creada_en</text>
+  <text x="50" y="270" class="attr ghost">actualizada_en</text>
+  <!-- Transaccion -->
+  <rect x="500" y="40" width="230" height="300" rx="8" ry="8" fill="#fdfdfd" stroke="#333"/>
+  <text x="615" y="60" text-anchor="middle" class="title">Transaccion</text>
+  <text x="510" y="90" class="attr pk">id (PK)</text>
+  <text x="510" y="110" class="attr">tarjeta_numero (FK)</text>
+  <text x="510" y="130" class="attr">tipo</text>
+  <text x="510" y="150" class="attr">monto</text>
+  <text x="510" y="170" class="attr">comercio</text>
+  <text x="510" y="190" class="attr ghost">idempotency_key</text>
+  <text x="510" y="210" class="attr">status</text>
+  <text x="510" y="230" class="attr">autorizacion_numero</text>
+  <text x="510" y="250" class="attr ghost">detalle_denegacion</text>
+  <text x="510" y="270" class="attr ghost">creada_en</text>
+  <!-- Relación -->
+  <polygon points="330,180 380,150 430,180 380,210" fill="#fff" stroke="#333"/>
+  <text x="380" y="182" text-anchor="middle" class="attr">registra</text>
+  <!-- Cardinalidades -->
+  <text x="300" y="182" text-anchor="middle" class="attr">1</text>
+  <text x="460" y="182" text-anchor="middle" class="attr">N</text>
+  <!-- Conectores -->
+  <line x1="240" y1="180" x2="330" y2="180" stroke="#333"/>
+  <line x1="430" y1="180" x2="500" y2="180" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,3 L0,6 z" fill="#333" />
+    </marker>
+  </defs>
+  <!-- Leyenda -->
+  <rect x="40" y="320" width="360" height="60" fill="#fafafa" stroke="#ccc"/>
+  <text x="50" y="338" class="attr pk">Subrayado: PK</text>
+  <text x="50" y="356" class="attr ghost">Gris: derivado / nullable / técnico</text>
+  <text x="50" y="374" class="attr sens" >Rojo: dato sensible (hash)</text>
+</svg>

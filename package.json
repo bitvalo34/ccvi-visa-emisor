@@ -35,7 +35,9 @@
     "test:integration": "node --env-file=.env --test tests/integration/**/*.test.js",
     "spec:lint": "echo //EDITADITO && redocly lint docs/openapi.yaml",
     "spec:preview": "echo //EDITADITO && redocly preview-docs docs/openapi.yaml",
-    "spec:bundle": "echo //EDITADITO && redocly bundle docs/openapi.yaml -o docs/openapi.bundle.yaml"
+    "spec:bundle": "echo //EDITADITO && redocly bundle docs/openapi.yaml -o docs/openapi.bundle.yaml",
+    "docs:pdf": "pandoc docs/manual/README.md -o docs/manual/manual-usuario.pdf",
+    "docs:pdf:verbose": "pandoc --pdf-engine=xelatex --metadata title=\"Manual Usuario Emisor Visa\" docs/manual/README.md -o docs/manual/manual-usuario.pdf"
   },
   "repository": {
     "type": "git",

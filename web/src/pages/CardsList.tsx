@@ -44,6 +44,12 @@ export default function CardsList() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['cards'] }), // Invalida lista tras mutación
   });
 
+  // ------------ Mutación: eliminar tarjeta ------------
+  const mutDelete = useMutation({
+    mutationFn: (numero: string) => api.deleteCard(numero),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['cards'] }),
+  });
+
   // ------------ Derivados: filtrar + ordenar ------------
   const list = useMemo(() => data ?? [], [data]);
 
@@ -197,6 +203,8 @@ export default function CardsList() {
                     onMarkExpired={() =>
                       mutEstado.mutate({ numero: card.numero, estado: 'vencida' })
                     }
+                    onDelete={() => mutDelete.mutate(card.numero)}
+                    deleting={mutDelete.isPending && mutDelete.variables === card.numero}
                   />
                 ))}
               </tbody>

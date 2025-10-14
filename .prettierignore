@@ -1,0 +1,23 @@
+# Archivos generados o binarios que no deben ser formateados
+*.pdf
+*.png
+*.svg
+*.drawio
+*.drawio.html
+
+# Salidas de bundlers/build
+node_modules
+coverage
+dist
+
+# Específicos del repo
+# HTML exportado por draw.io
+/docs/uml/*.html
+/docs/uml/*.drawio
+/docs/uml/*.drawio.html
+
+# Documentos PDF generados
+/docs/manual/*.pdf
+/web/README.pdf
+/README.pdf
+/Manual_Usuario.pdf

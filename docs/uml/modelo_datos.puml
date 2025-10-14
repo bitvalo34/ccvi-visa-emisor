@@ -1,0 +1,69 @@
+@startuml ModeloDatosEmisor
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam rectangle {
+  BorderColor #444
+  BackgroundColor #FFFFFF
+}
+
+' Enumeraciones (representadas como notes)
+note "ENUM emisor.card_estado = {activa, bloqueada, vencida}\nNota: no se usa 'eliminada'; delete físico via endpoint." as NEstado
+note "ENUM emisor.tx_tipo = {consumo, pago}" as NTipo
+note "ENUM emisor.tx_status = {APROBADO, DENEGADO}" as NStatus
+
+entity Tarjeta {
+  * numero : CHAR(16) <<PK>>
+  --
+  nombre_titular : TEXT
+  nombre_titular_normalizado : TEXT <<GENERATED>>
+  fecha_venc : CHAR(6) <<YYYYMM>>
+  cvv_hmac : TEXT <<HMAC_SHA256+PEPPER>>
+  monto_autorizado : NUMERIC(12,2)
+  monto_disponible : NUMERIC(12,2)
+  estado : card_estado
+  creada_en : TIMESTAMPTZ
+  actualizada_en : TIMESTAMPTZ
+}
+
+entity Transaccion {
+  * id : UUID <<PK>>
+  --
+  tarjeta_numero : CHAR(16) <<FK Tarjeta.numero>>
+  tipo : tx_tipo
+  monto : NUMERIC(12,2) (>0)
+  comercio : VARCHAR(80)
+  idempotency_key : VARCHAR(64) <<NULLABLE>>
+  autorizacion_numero : CHAR(6) <<UNICO_APROBADO>>
+  status : tx_status
+  detalle_denegacion : TEXT <<NULLABLE>>
+  creada_en : TIMESTAMPTZ
+}
+
+Tarjeta ||--o{ Transaccion : "tiene"
+NEstado .. Tarjeta
+NTipo .. Transaccion
+NStatus .. Transaccion
+
+note right of Tarjeta
+Checks:
+- numero ~ '^[0-9]{16}$'
+- fecha_venc ~ '^[0-9]{6}$'
+- No vencida (YYYYMM >= current month)
+- monto_autorizado >= 0, monto_disponible >= 0
+Triggers:
+- tg_tarjetas_touch (actualiza actualizada_en)
+end note
+
+note bottom of Transaccion
+Triggers:
+- tg_transacciones_apply (saldo, vencida, estado, monto, autorizacion_numero único != 000000)
+Índices parciales:
+- ux_tx_autoriz_aprobado (autorizacion_numero WHERE status='APROBADO')
+- ux_tx_idempotency (tarjeta_numero, comercio, monto, idempotency_key WHERE idempotency_key IS NOT NULL)
+- ix_tx_tarjeta_fecha (tarjeta_numero, creada_en DESC)
+Seguridad:
+- CVV nunca plano, sólo cvv_hmac
+end note
+
+@enduml

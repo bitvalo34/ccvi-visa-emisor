@@ -17,6 +17,8 @@ type Props = {
   onActivate: () => void;
   onBlock: () => void;
   onMarkExpired: () => void;
+  onDelete: () => void;
+  deleting?: boolean;
 };
 
 function maskCard(n: string) {
@@ -24,7 +26,14 @@ function maskCard(n: string) {
   return `•••• •••• •••• ${last4}`;
 }
 
-export default function FilaTarjeta({ card, onActivate, onBlock, onMarkExpired }: Props) {
+export default function FilaTarjeta({
+  card,
+  onActivate,
+  onBlock,
+  onMarkExpired,
+  onDelete,
+  deleting,
+}: Props) {
   const estadoBadge =
     card.estado === 'activa' ? 'success' : card.estado === 'bloqueada' ? 'warning' : 'secondary';
 
@@ -89,7 +98,7 @@ export default function FilaTarjeta({ card, onActivate, onBlock, onMarkExpired }
 
       {/* Acciones */}
       <td className="text-nowrap">
-        <div className="btn-group" role="group" aria-label="Acciones">
+        <div className="btn-group flex-wrap" role="group" aria-label="Acciones">
           <Link
             to={`/cards/${String(card.numero).replace(/\D+/g, '')}`}
             className="btn btn-outline-secondary btn-sm"
@@ -131,6 +140,26 @@ export default function FilaTarjeta({ card, onActivate, onBlock, onMarkExpired }
               <Ellipsis size={14} className="me-1" /> Vencida
             </motion.button>
           )}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            className="btn btn-outline-danger btn-sm"
+            onClick={() => {
+              if (deleting) return;
+              const pan4 = card.numero.slice(-4);
+              if (
+                window.confirm(
+                  `¿Eliminar tarjeta terminada en ${pan4}? Esta acción es definitiva y no puede deshacerse.`,
+                )
+              ) {
+                onDelete();
+              }
+            }}
+            title="Eliminar tarjeta definitivamente"
+            disabled={deleting}
+          >
+            {deleting ? 'Eliminando…' : 'Eliminar'}
+          </motion.button>
         </div>
       </td>
     </tr>

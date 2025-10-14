@@ -1,0 +1,88 @@
+<mxfile host="app.diagrams.net" modified="2025-10-14T00:00:00.000Z" agent="ERDiagramGenerator/1.0" version="28.2.6" type="device">
+  <diagram id="ERModelEmisor" name="Modelo-ER">
+    <mxGraphModel dx="1350" dy="760" grid="1" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <!-- ENTIDAD TARJETA -->
+        <mxCell id="tarjeta-entity" value="Tarjeta" style="swimlane;fontStyle=1;horizontal=0;childLayout=stackLayout;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="300" width="140" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="tarjeta-numero" value="numero (PK)" style="text" vertex="1" parent="tarjeta-entity">
+          <mxGeometry x="0" y="0" width="140" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tarjeta-nombre" value="nombre_titular" style="text" vertex="1" parent="tarjeta-entity">
+          <mxGeometry y="26" width="140" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tarjeta-nombre-norm" value="nombre_titular_normalizado" style="text;fontColor=#888888;" vertex="1" parent="tarjeta-entity">
+          <mxGeometry y="52" width="140" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tarjeta-fecha" value="fecha_venc" style="text" vertex="1" parent="tarjeta-entity">
+          <mxGeometry y="78" width="140" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tarjeta-cvv" value="cvv_hmac" style="text;fontColor=#bb2222;" vertex="1" parent="tarjeta-entity">
+          <mxGeometry y="104" width="140" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tarjeta-monto-aut" value="monto_autorizado" style="text" vertex="1" parent="tarjeta-entity">
+          <mxGeometry y="130" width="140" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tarjeta-monto-disp" value="monto_disponible" style="text" vertex="1" parent="tarjeta-entity">
+          <mxGeometry y="156" width="140" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tarjeta-estado" value="estado" style="text" vertex="1" parent="tarjeta-entity">
+          <mxGeometry y="182" width="140" height="26" as="geometry"/>
+        </mxCell>
+        <!-- ENTIDAD TRANSACCION -->
+        <mxCell id="tx-entity" value="Transaccion" style="swimlane;fontStyle=1;horizontal=0;childLayout=stackLayout;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="300" width="160" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="tx-id" value="id (PK)" style="text" vertex="1" parent="tx-entity">
+          <mxGeometry width="160" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tx-tarjeta-num" value="tarjeta_numero (FK)" style="text" vertex="1" parent="tx-entity">
+          <mxGeometry y="26" width="160" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tx-tipo" value="tipo" style="text" vertex="1" parent="tx-entity">
+          <mxGeometry y="52" width="160" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tx-monto" value="monto" style="text" vertex="1" parent="tx-entity">
+          <mxGeometry y="78" width="160" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tx-comercio" value="comercio" style="text" vertex="1" parent="tx-entity">
+          <mxGeometry y="104" width="160" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tx-idem" value="idempotency_key" style="text;fontColor=#888888;" vertex="1" parent="tx-entity">
+          <mxGeometry y="130" width="160" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tx-status" value="status" style="text" vertex="1" parent="tx-entity">
+          <mxGeometry y="156" width="160" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tx-aut-num" value="autorizacion_numero" style="text" vertex="1" parent="tx-entity">
+          <mxGeometry y="182" width="160" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tx-detalle" value="detalle_denegacion" style="text;fontColor=#888888;" vertex="1" parent="tx-entity">
+          <mxGeometry y="208" width="160" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tx-creada" value="creada_en" style="text;fontColor=#888888;" vertex="1" parent="tx-entity">
+          <mxGeometry y="234" width="160" height="26" as="geometry"/>
+        </mxCell>
+        <!-- RELACION 1:N -->
+        <mxCell id="rel-registra" value="registra" style="rhombus;whiteSpace=wrap;html=1;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="360" width="100" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-tarjeta-rel" style="endArrow=none;html=1;" edge="1" parent="1" source="tarjeta-entity" target="rel-registra">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge-rel-tx" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="rel-registra" target="tx-entity">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="card-left" value="1" style="text;html=1;resizable=0;align=right;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="315" y="392" width="40" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="card-right" value="N" style="text;html=1;resizable=0;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="465" y="392" width="40" height="20" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

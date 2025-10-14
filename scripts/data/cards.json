@@ -78,5 +78,65 @@
     "monto_disponible": 600,
     "estado": "activa",
     "nota": "para probar consumos y pagos combinados"
+  },
+  {
+    "numero": "4242424242424242",
+    "nombre": "DEV VISA 4242",
+    "fecha_venc": "202912",
+    "cvv": "242",
+    "monto_autorizado": 3000,
+    "monto_disponible": 2750,
+    "estado": "activa",
+    "nota": "visa de prueba estándar (Luhn OK)"
+  },
+  {
+    "numero": "4000056655665556",
+    "nombre": "VISA DEBIT TEST",
+    "fecha_venc": "202805",
+    "cvv": "556",
+    "monto_autorizado": 1200,
+    "monto_disponible": 1200,
+    "estado": "activa",
+    "nota": "tarjeta tipo débito de prueba"
+  },
+  {
+    "numero": "4444333322221111",
+    "nombre": "SAGEPAY VISA",
+    "fecha_venc": "202711",
+    "cvv": "411",
+    "monto_autorizado": 800,
+    "monto_disponible": 100,
+    "estado": "activa",
+    "nota": "saldo casi agotado para pruebas de insuficiencia"
+  },
+  {
+    "numero": "4716108999716531",
+    "nombre": "PAYPAL VISA",
+    "fecha_venc": "202603",
+    "cvv": "531",
+    "monto_autorizado": 2000,
+    "monto_disponible": 0,
+    "estado": "activa",
+    "nota": "disponible 0 para denegado por saldo"
+  },
+  {
+    "numero": "4917610000000000",
+    "nombre": "VISA ELECTRON",
+    "fecha_venc": "202904",
+    "cvv": "100",
+    "monto_autorizado": 5000,
+    "monto_disponible": 4500,
+    "estado": "bloqueada",
+    "nota": "bloqueada para probar denegado por estado"
+  },
+  {
+    "numero": "4556737586899855",
+    "nombre": "LUHN SAMPLE",
+    "fecha_venc": "202812",
+    "cvv": "855",
+    "monto_autorizado": 2500,
+    "monto_disponible": 1250,
+    "estado": "activa",
+    "nota": "número de muestra Luhn válido"
   }
 ]
